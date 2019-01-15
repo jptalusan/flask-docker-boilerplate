@@ -10,7 +10,7 @@ class BaseConfig(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = 'client/static/uploads'
     APP_NAME = 'Boilerplate'
-    REDIS_URL = 'redis://redis:6380/0'
+    REDIS_URL = 'redis://163.221.68.242:6380/0'
 
 class DevelopmentConfig(BaseConfig):
     """Development configuration."""

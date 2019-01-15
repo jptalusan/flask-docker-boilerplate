@@ -19,7 +19,7 @@ def create_app(script_info=None):
   app.config.from_object(app_settings)
 
   bootstrap.init_app(app)
-  socketio.init_app(app)
+  socketio.init_app(app, async_mode='eventlet', message_queue='redis://')
   CORS(app)
   csrf = CSRFProtect(app)
 

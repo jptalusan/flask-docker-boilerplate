@@ -7,6 +7,8 @@ from .. import socketio
 from ..forms.upload_form import UploadForm
 from . import functions
 from werkzeug.utils import secure_filename
+import redis
+from rq import Queue, Connection
 
 eventlet.monkey_patch()
 
@@ -14,7 +16,17 @@ main_blueprint = Blueprint('main', __name__,)
 
 @main_blueprint.route('/', methods=['GET'])
 def index():
-    return render_template('index.html')
+  return render_template('index.html')
+
+@main_blueprint.route('/redis', methods=['GET'])
+def redis_test():
+  redis.StrictRedis(host='163.221.68.242', port=6380).keys()
+  redis_conn = redis.from_url(current_app.config['REDIS_URL'])
+  redis_conn.set('KEY', 'REDIS value')
+  stored_data = redis_conn.get('KEY')
+  output = 'Hello ' + stored_data.decode()
+  print(output)
+  return output
 
 @main_blueprint.route('/upload', methods=['GET', 'POST'])
 def upload():

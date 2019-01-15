@@ -18,7 +18,5 @@ services:
     image: arm32v7/redis
     ports:
       - "6380:6380"
-    expose:
-      - "6380"
     command: redis-server --port 6380
     restart: always
