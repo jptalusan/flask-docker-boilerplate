@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<head>
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+  <title>SocketIO</title>
+</head>
+<body>
+  Hello, <b> {{ config.APP_NAME }} </b>
+  <script type="text/javascript" charset="utf-8">
+    //Establish connection and emit a message to confirm.
+
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+    socket.on('connect', function() {
+        socket.emit('my event', {data: 'I\'m connected!'});
+        console.log('Emit!');
+    });
+
+    socket.on('my response', function() {
+        console.log('Received response!');
+    });
+
+  </script>
+
+</body>
+</html>

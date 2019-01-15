@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Flask app</title>
+  </head>
+  <body>
+    <h2>Input:</h2>
+    <form method="post" action="" enctype="multipart/form-data">
+      <table>
+        {% for field in form %}
+          <tr>
+            <td>{{ field.name }}</td>
+            <td>{{ field(size=20) }}</td>
+            <td>
+              {% if field.errors %}
+                <ul class=errors>
+                  {% for error in field.errors %}
+                    <li>{{ error }}</li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+      <div class="panel-body">
+          <input type ="submit" name="action" value="Single">
+      </div>
+    </form>
+    {% if result != None %}
+      <h2>Results:</h2>
+      {{ result|safe }}
+    {% endif %}
+  </body>
+</html>
