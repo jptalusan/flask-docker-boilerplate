@@ -1,6 +1,6 @@
 version: "3"
 services:
-  web:
+  service_broker:
     build: ./frontend
     ports:
       - "5011:5011"
@@ -12,6 +12,8 @@ services:
       - PYTHONUNBUFFERED=1
       - APP_SETTINGS=project.server.config.DevelopmentConfig
     command: gunicorn --worker-class eventlet -w 1 -b 0.0.0.0:5011 wsgi:app --reload --no-sendfile
+    depends_on:
+      - redis
 
   redis:
     container_name: redis

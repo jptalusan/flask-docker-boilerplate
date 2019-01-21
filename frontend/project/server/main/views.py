@@ -20,10 +20,12 @@ def index():
 
 @main_blueprint.route('/redis', methods=['GET'])
 def redis_test():
-  redis.StrictRedis(host='163.221.68.242', port=6380).keys()
-  redis_conn = redis.from_url(current_app.config['REDIS_URL'])
-  redis_conn.set('KEY', 'REDIS value')
-  stored_data = redis_conn.get('KEY')
+  r = redis.StrictRedis(host='redis', port=6380)
+  #redis_conn = redis.from_url(current_app.config['REDIS_URL'])
+  #redis_conn.set('KEY', 'REDIS value')
+  r.set('KEY', 'REDIS value')
+  #stored_data = redis_conn.get('KEY')
+  stored_data = r.get('KEY')
   output = 'Hello ' + stored_data.decode()
   print(output)
   return output
@@ -46,5 +48,5 @@ def uploaded_file(filename):
 
 @socketio.on('my event')
 def log_message(message):
-    print('received: ' + str(message))
     socketio.emit('my response', {'data': 'got it!'})
+    print('received: ' + str(message))
