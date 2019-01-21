@@ -9,13 +9,13 @@ six==1.9.0
 Werkzeug==0.14
 eventlet==0.24.1
 
-flask-bootstrap
-flask-wtf
+flask-bootstrap==3.3.7.0
+flask-wtf==0.14
 
-redis
-rq
+redis==3.0.1
+rq==0.13.0
 
-requests
+requests==2.21.0
 
-flask-cors
+flask-cors==3.0.7
 
