@@ -3,14 +3,14 @@ Flask-SocketIO==3.0.1
 itsdangerous==0.24
 Jinja2==2.10
 MarkupSafe==0.23
-python-engineio
-python-socketio
-six==1.9.0
-Werkzeug==0.14
+python-engineio==3.2.3
+python-socketio==3.1.1
+six==1.10.0
+Werkzeug==0.14.1
 eventlet==0.24.1
 
-flask-bootstrap==3.3.7.0
-flask-wtf==0.14
+flask-bootstrap==3.3.7.1
+flask-wtf==0.14.2
 
 redis==3.0.1
 rq==0.13.0
