@@ -1,3 +1,4 @@
 REDIS = dict(host='redis',
-             port='6380',
-              queues=['default'])
+             port='6380')
+
+QUEUES = ['default']

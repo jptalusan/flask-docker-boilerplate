@@ -1,33 +1,33 @@
 import time
+import redis
 from rq import get_current_job, Queue, Connection
 import socket
 import pandas as pd
 from sklearn import svm
 from sklearn.externals import joblib
-from io import StringIO
-import redis
 
+from tools import redis_tools, general_tools, Defs
 import config
-import funcs
 
-def classify_iris_dist(input_data, nodes, unique_ID, sequence_ID):
+#TODO: Check if data is not mangled or truncated:
+#https://stackoverflow.com/questions/37943778/how-to-set-get-pandas-dataframe-to-from-redis
+
+def classify_iris(unique_ID, sequence_ID, redis_df_key):
+  process_start_time = redis_tools.get_redis_server_time()
   job = get_current_job()
-  redis_connection = redis.StrictRedis(host=config.REDIS['host'],
-                                       port=config.REDIS['port'],
-                                       password="", decode_responses=True)
 
   tic = time.clock()
-
-  funcs.appendToListK(redis_connection, unique_ID + NODES, job.id)
-
-  input_dataIO = StringIO(input_data.decode("utf-8"))
   job.meta['handled_by'] = socket.gethostname()
-  job.meta['handled_time'] = get_current_time()
-  job.meta['progress'] = 0.0
-  job.meta['unique_ID'] = unique_ID
+  job.meta['handled_time'] = int(time.time())
   job.save_meta()
+  
+  r = redis.StrictRedis(host=config.REDIS['host'],
+                                       port=config.REDIS['port'],
+                                       password="", decode_responses=False)
 
-  df = pd.read_csv(input_dataIO, header=None)
+  redis_tools.appendToListK(r, unique_ID + Defs.TASK_SUFFIX, job.id)
+
+  df = pd.read_msgpack(r.get(redis_df_key))
   print(df.shape)
 
   clf = joblib.load('models/SVM_iris.pkl')
@@ -35,25 +35,39 @@ def classify_iris_dist(input_data, nodes, unique_ID, sequence_ID):
 
   df_prob = pd.DataFrame(prob)
   prob_idx = df_prob.idxmax(axis=1)
+  
+  feature_list = ['setosa', 'versicolor', 'virginica']
+
+  output = [feature_list[x] for x in prob_idx]
+  results = {}
+  results['classification'] = output
 
   toc = time.clock()
   job.meta['progress'] = toc - tic
   job.save_meta()
-  iris_classes = ['setosa', 'versicolor', 'virginica']
 
-  output = [iris_classes[x] for x in prob_idx]
-  print(output)
+  redis_tools.incrRedisKV(r, unique_ID + Defs.DONE_TASK_COUNT)
+  task_count = redis_tools.getRedisV(r, unique_ID + Defs.TASK_COUNT)
+  done_task_count = redis_tools.getRedisV(r, unique_ID + Defs.DONE_TASK_COUNT)
 
-  funcs.incrRedisKV(redis_connection, unique_ID + DONE_NODE_COUNT)
-  node_count = funcs.getRedisV(redis_connection, unique_ID + NODE_COUNT)
-  done_node_count = funcs.getRedisV(redis_connection, unique_ID + DONE_NODE_COUNT)
+  metas = {
+    'unique_id' : unique_ID,
+    'task_count' : task_count,
+    'done_task_count' : done_task_count,
+    'feature_list' : feature_list,
+  }
 
-  if node_count == done_node_count:
-    funcs.setRedisKV(redis_connection, unique_ID, "finished")
-    with Connection(redis_connection):
+  if task_count == done_task_count:
+    redis_tools.setRedisKV(r, unique_ID, "finished")
+    with Connection(r):
       q = Queue('aggregator')
-      t = q.enqueue('tasks.aggregate_data', unique_ID)
+      t = q.enqueue('tasks.aggregate_iris_data', unique_ID, depends_on=job.id)
+      metas['agg_task_id'] = t.id
   else:
     print('still not done processing')
 
-  return { 'sequence_ID': sequence_ID, 'output': output }
+  general_tools.add_exec_time_info(unique_ID, "processing-{}".format(sequence_ID), process_start_time, redis_tools.get_redis_server_time())
+
+  response = { 'sequence_ID': sequence_ID, 'metas' : metas, 'output': results, 'outsize': len(results)}
+  print(response)
+  return response

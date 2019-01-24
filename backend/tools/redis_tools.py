@@ -40,11 +40,8 @@ def appendToListK(r, K, V):
   except:
     return False
 
-def get_current_time():
-  HERE = tz.gettz('Asia/Tokyo')
-  UTC = tz.gettz('UTC')
-
-  ts = datetime.datetime.utcnow().replace(tzinfo=UTC).astimezone(HERE)
-  # local_time = ts.strftime('%Y-%m-%d %H:%M:%S.%f %Z%z')
-  local_time = ts.strftime('%Y-%m-%d %H:%M:%S %Z')
-  return local_time
+def get_redis_server_time():
+  # Start a redis connection
+  r = redis.StrictRedis(host="redis", port=6380, password="", decode_responses=True)
+  sec, microsec = r.time()
+  return ((sec * 1000000) + microsec)

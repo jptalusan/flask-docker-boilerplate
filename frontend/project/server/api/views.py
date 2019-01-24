@@ -1,21 +1,19 @@
 import redis
 from rq import Queue, Connection
-from . import funcs
+from ..tools import pandas_tools, general_tools, query_tools, redis_tools, Defs
 import multiprocessing
 from flask import Flask, Blueprint, request, jsonify, current_app
 import pandas as pd
 import os
-from . import utils
+import time
 
 api_blueprint = Blueprint('api', __name__,)
 
-def enqueue_task(queue, unique_id, seq_id, model, sensor_list, param_list, columns, values):
+def enqueue_task(queue, unique_id, seq_id, redis_df_key):
   r = redis.StrictRedis(host='redis', port=6380)
   with Connection(r):
     q = Queue('default')
-    task = q.enqueue('tasks.iris_classify', unique_id, seq_id,
-                      model, sensor_list, param_list,
-                      columns, values)
+    task = q.enqueue('tasks.classify_iris', unique_id, seq_id, redis_df_key)
   queue.put(task.get_id())
   return
 
@@ -32,37 +30,65 @@ def iris_dist_process():
   data = request.get_json(force=True)
   filename = data['filename']
   nodes = data["nodes"]
-  r = redis.StrictRedis(host='redis', port=6380)
+  r = redis.StrictRedis(host='redis', port=6380, decode_responses=True)
   print(filename)
   try:
-    if filename and funcs.allowed_file(filename):
-      unique_id = utils.initialize_query(nodes)
+    if filename and general_tools.allowed_file(filename):
+      unique_id = query_tools.initialize_query(nodes,
+                                               count_suffix=Defs.TASK_COUNT,
+                                               done_count_suffix=Defs.DONE_TASK_COUNT)
+
       with open(os.path.join(current_app.instance_path, 'htmlfi', filename)) as f:
         df = pd.read_csv(f, header=None)
         print(df.shape)
-        df_arr = funcs.df_split(df, nodes)
+        df_arr = pandas_tools.df_split(df, nodes)
         print(len(df_arr))
+
+        response = {}
+        response['query_ID'] = unique_id
+        response['query_received'] = query_tools.get_current_time()
+
+        task_ids = []
         processes = []
         mpq = multiprocessing.Queue()
+
+        seq_id = 0
+
         for df in df_arr:
-          #p = multiprocessing.Process(target=enqueue_task,
-          #                            args=(mpq, unique
-          print(unique_id)
-#        q = Queue(r)
-#        #Split file into 3
-#        files = funcs.split(filename, 3)
-#
-#        funcs.setRedisKV(redis_conn, u_ID, 'ongoing')
-#        funcs.setRedisKV(redis_conn, u_ID + NODE_COUNT, nodes)
-#        funcs.setRedisKV(redis_conn, u_ID + DONE_NODE_COUNT, 0)
-#
-#        #assuming the files are in sequential order, we can send some sequence id to the queue
-#        for sequence_ID, file in enumerate(files):
-#          data = file.read()
-#          #Need to decode?
-#          #Race condition i think.
-#          task = q.enqueue('tasks.classify_iris_dist', data, nodes, u_ID, sequence_ID)
-      response = {'response': 'classification'}
+          df_key = redis_tools.store_dataframe_with_key(r, unique_id + '_' + str(seq_id), df)
+          print(df_key)
+
+          p = multiprocessing.Process(target=enqueue_task, 
+                                      args=(mpq, unique_id, seq_id, df_key))
+          processes.append(p)
+          p.start()
+
+          seq_id += 1
+
+        for p in processes:
+          task = mpq.get()
+          task_ids.append(task)
+
+        for p in processes:
+          p.join()
+        toc = time.perf_counter()
+      response_object = {
+        'status': 'success',
+        'unique_ID': unique_id,
+        # 'params': {
+        #   'start_time'  : start_time,
+        #   'end_time'    : end_time,
+        #   'split_count' : split_count
+        # },
+        'data': {
+          'task_id': task_ids
+        },
+        # "benchmarks" : {
+        #   "exec_time" : str(toc - tic),
+        # }
+      }
+      response['response_object'] = response_object
+      print(response)
       return jsonify(response)
   except IOError:
     pass

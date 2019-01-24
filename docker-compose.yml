@@ -15,18 +15,20 @@ services:
     depends_on:
       - redis
 
-  # service_worker:
-  #  build: ./backend
-  #  ports:
-  #    - "5012:5012"
-  #  volumes:
-  #    - ./backend:/usr/src/app
-  #  command: python3 worker.py
-  #  depends_on:
-  #    - redis
-  #  deploy:
-  #    restart_policy:
-  #      condition: any
+  service_worker:
+    build: ./backend
+    ports:
+      - "5012:5012"
+    volumes:
+      - ./backend:/usr/src/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: python3 worker.py
+    depends_on:
+      - redis
+    deploy:
+      restart_policy:
+        condition: any
 
   redis:
     container_name: redis

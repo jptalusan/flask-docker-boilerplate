@@ -1,5 +1,3 @@
-import os
-
 ALLOWED_EXTENSIONS = set(['png', 'txt', 'csv', 'jpg', 'data'])
 
 def allowed_file(filename):

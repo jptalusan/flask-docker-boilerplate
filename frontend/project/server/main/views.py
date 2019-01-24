@@ -6,7 +6,7 @@ import os
 import eventlet
 from .. import socketio
 from ..forms.upload_form import UploadForm
-from . import funcs
+from ..tools import general_tools
 from werkzeug.utils import secure_filename
 import redis
 from rq import Queue, Connection
@@ -41,7 +41,7 @@ def upload():
   form = UploadForm()
   if form.validate_on_submit():
     file = form.file.data
-    if file and funcs.allowed_file(file.filename):
+    if file and general_tools.allowed_file(file.filename):
       filename = secure_filename(file.filename)
       os.makedirs(os.path.join(current_app.instance_path, 'htmlfi'), exist_ok=True)
       file.save(os.path.join(current_app.instance_path, 'htmlfi', filename))
@@ -58,18 +58,18 @@ def iris_classifier():
   if request.method == 'POST':
     if form.validate_on_submit():
       file = form.file.data
-      if file and funcs.allowed_file(file.filename):
+      if file and general_tools.allowed_file(file.filename):
         filename = secure_filename(file.filename)
         os.makedirs(os.path.join(current_app.instance_path, 'htmlfi'), exist_ok=True)
         file.save(os.path.join(current_app.instance_path, 'htmlfi', filename))
         print(filename)
-        url = request.url_root + '/api/iris_dist_process'
+        url = request.url_root + 'api/iris_dist_process'
         data = {"filename": filename,
                 "nodes": 1}
         print(url, data)
         r = requests.post(url, json=data)
         dictFromServer = r.json()
-        return "TEST"
+        return r.text
         # return 'received response from API: ' + dictFromServer['response']
   elif request.method == 'GET':
       return render_template('upload.html', form=form, result=None)
