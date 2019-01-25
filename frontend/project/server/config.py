@@ -11,6 +11,8 @@ class BaseConfig(object):
     UPLOAD_FOLDER = 'client/static/uploads'
     APP_NAME = 'Boilerplate'
     REDIS_URL = 'redis://redis:6380/0'
+    REDIS_HOST = 'redis'
+    REDIS_PORT = 6380
 
 class DevelopmentConfig(BaseConfig):
     """Development configuration."""

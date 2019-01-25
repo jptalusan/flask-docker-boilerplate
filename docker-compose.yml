@@ -30,6 +30,21 @@ services:
       restart_policy:
         condition: any
 
+  aggregator:
+    build: ./aggregator
+    ports:
+      - "5013:5013"
+    command: python3 worker.py
+    volumes:
+      - ./aggregator:/usr/src/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - redis
+    deploy:
+      restart_policy:
+        condition: any
+
   redis:
     container_name: redis
     image: arm32v7/redis
@@ -39,3 +54,23 @@ services:
       - "6380"
     command: redis-server --port 6380
     restart: always
+
+  mosquitto:
+    image: eclipse-mosquitto
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    command: eclipse-mosquitto
+
+  # services:
+  #   # Define an InfluxDB service
+  #   influxdb:
+  #     image: influxdb:1.7.3-alpine
+  #     volumes:
+  #       - ./data/influxdb:/var/lib/influxdb
+  #     ports:
+  #       - "8086:8086"

@@ -29,7 +29,9 @@ def test():
 
 @main_blueprint.route('/redis', methods=['GET'])
 def redis_test():
-  r = redis.StrictRedis(host='redis', port=6380)
+  r = redis.StrictRedis(host=current_app.config['REDIS_HOST'], 
+                        port=current_app.config['REDIS_PORT'])
+
   r.set('KEY', 'REDIS value')
   stored_data = r.get('KEY')
   output = 'Hello ' + stored_data.decode()

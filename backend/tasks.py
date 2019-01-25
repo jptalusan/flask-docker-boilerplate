@@ -8,6 +8,7 @@ from sklearn.externals import joblib
 
 from tools import redis_tools, general_tools, Defs
 import config
+import json
 
 #TODO: Check if data is not mangled or truncated:
 #https://stackoverflow.com/questions/37943778/how-to-set-get-pandas-dataframe-to-from-redis
@@ -47,8 +48,8 @@ def classify_iris(unique_ID, sequence_ID, redis_df_key):
   job.save_meta()
 
   redis_tools.incrRedisKV(r, unique_ID + Defs.DONE_TASK_COUNT)
-  task_count = redis_tools.getRedisV(r, unique_ID + Defs.TASK_COUNT)
-  done_task_count = redis_tools.getRedisV(r, unique_ID + Defs.DONE_TASK_COUNT)
+  task_count = redis_tools.getRedisV(r, unique_ID + Defs.TASK_COUNT).strip().decode('utf-8')
+  done_task_count = redis_tools.getRedisV(r, unique_ID + Defs.DONE_TASK_COUNT).strip().decode('utf-8')
 
   metas = {
     'unique_id' : unique_ID,
@@ -61,7 +62,7 @@ def classify_iris(unique_ID, sequence_ID, redis_df_key):
     redis_tools.setRedisKV(r, unique_ID, "finished")
     with Connection(r):
       q = Queue('aggregator')
-      t = q.enqueue('tasks.aggregate_iris_data', unique_ID, depends_on=job.id)
+      t = q.enqueue('tasks.aggregate_iris', unique_ID, depends_on=job.id)
       metas['agg_task_id'] = t.id
   else:
     print('still not done processing')
@@ -69,5 +70,5 @@ def classify_iris(unique_ID, sequence_ID, redis_df_key):
   general_tools.add_exec_time_info(unique_ID, "processing-{}".format(sequence_ID), process_start_time, redis_tools.get_redis_server_time())
 
   response = { 'sequence_ID': sequence_ID, 'metas' : metas, 'output': results, 'outsize': len(results)}
-  print(response)
+  print('Backend: ', response)
   return response
