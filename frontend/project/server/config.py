@@ -13,6 +13,8 @@ class BaseConfig(object):
     REDIS_URL = 'redis://redis:6380/0'
     REDIS_HOST = 'redis'
     REDIS_PORT = 6380
+    MQTT_BROKER_URL = 'mosquitto'
+    MQTT_BROKER_PORT = 1883
 
 class DevelopmentConfig(BaseConfig):
     """Development configuration."""

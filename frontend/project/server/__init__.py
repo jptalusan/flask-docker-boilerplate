@@ -4,9 +4,14 @@ from flask_bootstrap import Bootstrap
 from flask_socketio import SocketIO
 from flask_cors import CORS
 from flask_wtf.csrf import CSRFProtect
+from flask_mqtt import Mqtt
+import eventlet
+
+eventlet.monkey_patch()
 
 bootstrap = Bootstrap()
 socketio = SocketIO()
+mqtt = Mqtt()
 
 def create_app(script_info=None):
   app = Flask(
@@ -21,6 +26,7 @@ def create_app(script_info=None):
   bootstrap.init_app(app)
   #socketio.init_app(app, async_mode='eventlet', message_queue='redis://')
   socketio.init_app(app, async_mode='eventlet')
+  mqtt.init_app(app)
   CORS(app)
   csrf = CSRFProtect(app)
 

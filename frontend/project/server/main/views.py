@@ -4,7 +4,7 @@ from flask import jsonify
 import requests
 import os
 import eventlet
-from .. import socketio
+from .. import socketio, mqtt
 from ..forms.upload_form import UploadForm
 from ..tools import general_tools
 from werkzeug.utils import secure_filename
@@ -18,25 +18,6 @@ main_blueprint = Blueprint('main', __name__,)
 @main_blueprint.route('/', methods=['GET'])
 def index():
   return render_template('index.html')
-
-@main_blueprint.route('/test', methods=['GET'])
-def test():
-  url = request.url_root + '/api/receive'
-  data = {"key": "valueeee"}
-  r = requests.post(url, json=data)
-  dictFromServer = r.json()
-  return 'received response from API: ' + dictFromServer['response']
-
-@main_blueprint.route('/redis', methods=['GET'])
-def redis_test():
-  r = redis.StrictRedis(host=current_app.config['REDIS_HOST'], 
-                        port=current_app.config['REDIS_PORT'])
-
-  r.set('KEY', 'REDIS value')
-  stored_data = r.get('KEY')
-  output = 'Hello ' + stored_data.decode()
-  print(output)
-  return output
 
 @main_blueprint.route('/upload', methods=['GET', 'POST'])
 def upload():
@@ -71,12 +52,34 @@ def iris_classifier():
         print(url, data)
         r = requests.post(url, json=data)
         dictFromServer = r.json()
-        return r.text
+        return redirect(url_for('main.monitor'))
         # return 'received response from API: ' + dictFromServer['response']
   elif request.method == 'GET':
       return render_template('upload.html', form=form, result=None)
 
+@main_blueprint.route('/monitor', methods=['GET'])
+def monitor():
+  mqtt.subscribe('hello')
+  return render_template('monitor.html')
+
 @socketio.on('my event')
 def log_message(message):
-    socketio.emit('my response', {'data': 'got it!'})
-    print('received: ' + str(message))
+  socketio.emit('my response', {'data': 'got it!'})
+  print('received: ' + str(message))
+
+@mqtt.on_message()
+def handle_mqtt_message(client, userdata, message):
+  data = dict(
+      topic=message.topic,
+      payload=message.payload.decode()
+  )
+  print(data)
+  monitor = dict(
+    user_name=data['topic'],
+    message=data['payload']
+  )
+  socketio.emit('monitor message', data=monitor)
+
+@mqtt.on_log()
+def handle_logging(client, userdata, level, buf):
+    print(level, buf)

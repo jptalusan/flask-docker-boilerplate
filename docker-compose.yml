@@ -7,13 +7,14 @@ services:
     volumes:
       - ./frontend:/usr/src/app
     environment:
-      - FLASK_DEBUG=1
+      - FLASK_DEBUG=0
       - FLASK_ENV=development
       - PYTHONUNBUFFERED=1
       - APP_SETTINGS=project.server.config.DevelopmentConfig
-    command: gunicorn --worker-class eventlet -w 1 -b 0.0.0.0:5011 wsgi:app --reload --no-sendfile
+    command: gunicorn --worker-class eventlet -w 1 -b 0.0.0.0:5011 wsgi:app --no-sendfile
     depends_on:
       - redis
+      - mosquitto
 
   service_worker:
     build: ./backend
@@ -62,9 +63,8 @@ services:
       - "9001:9001"
     volumes:
       - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
-      - ./mosquitto/data:/mosquitto/data
-      - ./mosquitto/log:/mosquitto/log
-    command: eclipse-mosquitto
+      - ./mosquitto/data
+      - ./mosquitto/log/mosquitto.log:/mosquitto/log/mosquitto.log
 
   # services:
   #   # Define an InfluxDB service

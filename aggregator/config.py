@@ -1,7 +1,7 @@
 REDIS = dict(host='redis',
              port='6380')
 
-QUEUES = ['default']
+QUEUES = ['aggregator']
 
 MQTT = dict(host='mosquitto',
              port=1883)

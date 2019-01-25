@@ -11,6 +11,7 @@ eventlet==0.24.1
 
 flask-bootstrap==3.3.7.1
 flask-wtf==0.14.2
+flask-mqtt==1.0.5
 
 redis==3.0.1
 rq==0.13.0
