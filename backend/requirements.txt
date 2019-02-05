@@ -1,3 +1,6 @@
 redis
 rq
 paho-mqtt
+requests
+scikit-learn
+pandas

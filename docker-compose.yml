@@ -48,7 +48,7 @@ services:
 
   redis:
     container_name: redis
-    image: arm32v7/redis
+    image: redis
     ports:
       - "6380:6380"
     expose:
@@ -66,11 +66,11 @@ services:
       - ./mosquitto/data
       - ./mosquitto/log/mosquitto.log:/mosquitto/log/mosquitto.log
 
-  # services:
-  #   # Define an InfluxDB service
-  #   influxdb:
-  #     image: influxdb:1.7.3-alpine
-  #     volumes:
-  #       - ./data/influxdb:/var/lib/influxdb
-  #     ports:
-  #       - "8086:8086"
+  services:
+    # Define an InfluxDB service
+    influxdb:
+      image: influxdb:1.7.3-alpine
+      volumes:
+        - ./data/influxdb:/var/lib/influxdb
+      ports:
+        - "8086:8086"

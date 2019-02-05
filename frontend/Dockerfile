@@ -1,5 +1,5 @@
 #FROM balenalib/raspberrypi3-python:3.6.6-stretch-build
-FROM linusmotu/arm-pi-datascience:1.0.0
+FROM python:3.6
 
 EXPOSE 5011
 

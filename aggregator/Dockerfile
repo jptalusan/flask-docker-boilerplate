@@ -1,4 +1,4 @@
-FROM linusmotu/arm-pi-datascience:1.0.0
+FROM python:3.6
 
 EXPOSE 5013
 
