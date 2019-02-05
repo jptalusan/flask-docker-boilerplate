@@ -2,3 +2,5 @@ redis
 rq
 paho-mqtt
 scikit-learn[alldeps]
+pandas
+
