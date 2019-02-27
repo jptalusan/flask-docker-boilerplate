@@ -8,7 +8,9 @@ Problems:
 Need to create a mosquitto.log file with the following permissions...  
 
 mkdir mosquitto/log  
-cd mosquitto/log  
-sudo touch mosquitto.log  
-sudo chown 1883:1883 ../../mosquitto/log -R  
+sudo touch mosquitto/log/mosquitto.log  
+sudo chown 1883:1883 mosquitto/log -R  
 
+-----  
+A sample service is present in the frontend/project/server/main folder.  
+Corresponding backend and aggregator tasks are placed in the backend and aggregator folders with the label "main"  
