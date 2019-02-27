@@ -5,7 +5,7 @@ import requests
 import os
 import eventlet
 from .. import socketio, mqtt
-from ..forms.upload_form import UploadForm
+from .forms.upload_form import UploadForm
 from ..tools import general_tools
 from werkzeug.utils import secure_filename
 import redis
@@ -13,11 +13,26 @@ from rq import Queue, Connection
 
 eventlet.monkey_patch()
 
-main_blueprint = Blueprint('main', __name__,)
+main_blueprint = Blueprint('main', __name__, 
+                           template_folder='templates', 
+                           static_folder='static',
+                           static_url_path='static')
 
 @main_blueprint.route('/', methods=['GET'])
 def index():
-  return render_template('index.html')
+  return render_template('main/index.html')
+
+@main_blueprint.route('/hello')
+def hello():
+  print("Name:", main_blueprint.name)
+
+  url = request.url_root + url_for('api.receive')
+  print(url)
+  data = {"key": "valueeee"}  
+  r = requests.post(url, json=data) 
+  dictFromServer = r.json() 
+  print('received response from API: ' + dictFromServer['response'])
+  return render_template(os.path.join(main_blueprint.name, 'hello.html'))
 
 @main_blueprint.route('/upload', methods=['GET', 'POST'])
 def upload():
@@ -29,7 +44,7 @@ def upload():
       os.makedirs(os.path.join(current_app.instance_path, 'htmlfi'), exist_ok=True)
       file.save(os.path.join(current_app.instance_path, 'htmlfi', filename))
       return redirect(url_for('main.uploaded_file', filename=filename))
-  return render_template('upload.html', form=form, result=None)
+  return render_template(os.path.join(main_blueprint.name, 'upload.html'), form=form, result=None)
 
 @main_blueprint.route('/uploads/<filename>')
 def uploaded_file(filename):
@@ -46,7 +61,8 @@ def iris_classifier():
         os.makedirs(os.path.join(current_app.instance_path, 'htmlfi'), exist_ok=True)
         file.save(os.path.join(current_app.instance_path, 'htmlfi', filename))
         print(filename)
-        url = request.url_root + 'api/iris_dist_process'
+
+        url = request.url_root + main_blueprint.name + '/api/iris_dist_process'
         data = {"filename": filename,
                 "nodes": 1}
         print(url, data)
@@ -55,12 +71,12 @@ def iris_classifier():
         return redirect(url_for('main.monitor'))
         # return 'received response from API: ' + dictFromServer['response']
   elif request.method == 'GET':
-      return render_template('upload.html', form=form, result=None)
+      return render_template(os.path.join(main_blueprint.name, 'upload.html'), form=form, result=None)
 
 @main_blueprint.route('/monitor', methods=['GET'])
 def monitor():
   mqtt.subscribe('hello')
-  return render_template('monitor.html')
+  return render_template(os.path.join(main_blueprint.name, 'monitor.html'))
 
 @socketio.on('my event')
 def log_message(message):

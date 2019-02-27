@@ -20,7 +20,7 @@ def enqueue_task(queue, unique_id, seq_id, redis_df_key):
 @api_blueprint.route('/receive', methods=['POST'])
 def receive():
   data = request.get_json(force=True)
-  print(data['key'])
+  print("received by api:", data['key'])
   response = {'response': 'hello from the api side'}
   return jsonify(response)
 
